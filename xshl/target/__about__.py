@@ -40,7 +40,7 @@ __all__ = [
 ]
 
 __title__ = "xshl-target"
-__summary__ = "Python Library for XSHL Targets"
+__summary__ = "Python Library for XSHL Target"
 __uri__ = "https://github.com/mcode-cc/py-xshl-target"
 __version__ = "0.1.0"
 __author__ = "MCode GmbH"

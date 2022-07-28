@@ -43,7 +43,7 @@ base_dir = os.path.dirname(__file__)
 about = {}
 if base_dir:
     os.chdir(base_dir)
-with open(os.path.join(base_dir, "xshl", "targets", "__about__.py")) as f:
+with open(os.path.join(base_dir, "xshl", "target", "__about__.py")) as f:
     exec(f.read(), about)
 
 with open(os.path.join(base_dir, "README.md"), "r") as f:

@@ -1,6 +1,6 @@
 import unittest
 
-from xshl.targets import Target, Targets
+from xshl.target import Target, Targets
 
 
 class TestMethods(unittest.TestCase):
