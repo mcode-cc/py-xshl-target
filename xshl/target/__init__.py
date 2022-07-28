@@ -216,13 +216,23 @@ class Target:
 
 class Targets(list):
     def __init__(self, *args, unique: bool = False, **kwargs):
-        super(Targets, self).__init__(
-            [Target(x) if not isinstance(x, Target) else x for x in args[0]] if len(args) > 0 else []
-        )
+        _all = [Target(x) if not isinstance(x, Target) else x for x in args[0]] if len(args) > 0 else []
+        if unique:
+            _init = []
+            for i in _all:
+                if not self.contains(_init, i):
+                    _init.append(i)
+        else:
+            _init = _all
+        super(Targets, self).__init__(_init)
         self._unique = unique
 
+    @staticmethod
+    def contains(items: list, item: Target):
+        return str(item) in list(map(str, items))
+
     def __contains__(self, value: Target):
-        return str(value) in list(map(str, self))
+        return self.contains(self, value)
 
     def insert(self, index, value: Target):
         if (self._unique and value not in self) or not self._unique:

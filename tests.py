@@ -1,5 +1,4 @@
 import unittest
-
 from xshl.target import Target, Targets
 
 
@@ -62,6 +61,34 @@ class TestMethods(unittest.TestCase):
              '@context': {'value': {'lang': 'en-ru', 'text': 'Targets'}}}
         ))
         t.insert(0, Target("https://en.wikipedia.org/wiki/Object_database"))
+        self.assertTrue(len(t) == 4)
+
+    def test_targets_unique_init(self):
+        t = Targets(
+            [
+                "project:[\"mcode-cc\",\"xshl\"]@pypi.org/xshl-target/#https://xshl.org/schemas/1.1/definitions/target.json",
+                "https://github.com/mcode-cc/py-xshl-target",
+                "https://en.wikipedia.org/wiki/Object_database",
+                "https://translate.yandex.ru?value.lang=en-ru&value.text=Targets",
+                "https://en.wikipedia.org/wiki/Object_database"
+            ],
+            unique=True
+        )
+        t.insert(0, Target("https://github.com/mcode-cc/py-xshl-target"))
+        t.append(
+            Target(
+                **{
+                    "@id": "https://xshl.org/schemas/1.1/definitions/target.json",
+                    "@type": "/xshl-target/",
+                    "base": "pypi.org",
+                    "entity": [
+                        "mcode-cc",
+                        "xshl"
+                    ],
+                    "spot": "project"
+                }
+            )
+        )
         self.assertTrue(len(t) == 4)
 
 
