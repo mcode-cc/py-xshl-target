@@ -150,6 +150,9 @@ class Target:
         """ Return self==value. """
         return str(self) == str(value)
 
+    def __len__(self) -> int:
+        return len(self.as_dict)
+
     def __iter__(self):
         # now 'yield' through the items
         for x, y in self.as_dict.items():
