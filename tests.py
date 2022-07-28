@@ -40,11 +40,8 @@ class TestMethods(unittest.TestCase):
         self.assertTrue("@context" not in dict(t))
 
     def test_target_len(self):
-        url = "#https://translate.yandex.ru?value.lang=en-ru&value.text=Targets"
-        t = Target(url)
-        print(len(t))
-        del t["@context"]
-        self.assertTrue("@context" not in dict(t))
+        t = Target("https://translate.yandex.ru?value.lang=en-ru&value.text=Targets")
+        self.assertTrue(len(t) == 3)
 
     def test_targets_init_unique(self):
         t = Targets([
