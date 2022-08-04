@@ -164,6 +164,12 @@ class Target:
         else:
             raise Exception("Unknown property: {}".format(name))
 
+    def __setitem__(self, name: str, value):
+        if name in PROPERTIES:
+            setattr(self, name.replace("@", "_"), value)
+        else:
+            raise Exception("Unknown property: {}".format(name))
+
     def __delitem__(self, name: str):
         if name in PROPERTIES:
             setattr(self, name.replace("@", "_"), None)

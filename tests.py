@@ -29,8 +29,9 @@ class TestMethods(unittest.TestCase):
     def test_target_str(self):
         url = "https://translate.yandex.ru/?value.lang=en-ru&value.text=Targets"
         t = Target(url)
+        t["@id"] = "aaa"
         self.assertTrue(t["@context"]["value"]["text"] == "Targets")
-        self.assertTrue(str(t) == url)
+        self.assertTrue(str(t) == url + "#aaa")
 
     def test_target_dict(self):
         url = "https://translate.yandex.ru/?value.lang=en-ru&value.text=Targets"
@@ -41,6 +42,14 @@ class TestMethods(unittest.TestCase):
 
     def test_target_len(self):
         t = Target("https://translate.yandex.ru?value.lang=en-ru&value.text=Targets")
+        self.assertTrue(len(t) == 3)
+
+    def test_target_spot(self):
+        t = Target({
+            "spot": "public",
+            "base": "url",
+            "entity": "https://translate.yandex.ru?value.lang=en-ru&value.text=Targets"
+        })
         self.assertTrue(len(t) == 3)
 
     def test_targets_init_unique(self):
