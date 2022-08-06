@@ -104,6 +104,53 @@ class TestMethods(unittest.TestCase):
         )
         self.assertTrue(len(t) == 4)
 
+    def test_targets_unique_append(self):
+        t = Targets(
+            [
+                "https://github.com/mcode-cc/py-xshl-target",
+                "https://en.wikipedia.org/wiki/Object_database",
+                "https://translate.yandex.ru?value.lang=en-ru&value.text=Targets",
+                "https://en.wikipedia.org/wiki/Object_database"
+            ],
+            unique=True
+        )
+        value0 = Target(
+            **{
+                "@id": "https://xshl.org/schemas/1.1/definitions/target.json",
+                "@type": "/xshl-target/",
+                "base": "pypi.org",
+                "entity": [
+                    "mcode-cc",
+                    "xshl"
+                ],
+                "spot": "project"
+            }
+        )
+
+        t.append(value0)
+        value2 = t.append(
+            Target(
+                "project:[\"mcode-cc\",\"xshl\"]@pypi.org/xshl-target/"
+                "#https://xshl.org/schemas/1.1/definitions/target.json"
+            )
+        )
+        self.assertTrue(value0 is value2)
+
+    def test_targets_unique_insert(self):
+        t = Targets(
+            [
+                "https://en.wikipedia.org/wiki/Object_database",
+                "https://translate.yandex.ru?value.lang=en-ru&value.text=Targets",
+                "https://en.wikipedia.org/wiki/Object_database"
+            ],
+            unique=True
+        )
+        value0 = Target("https://github.com/mcode-cc/py-xshl-target")
+        t.insert(0, value0)
+        value2 = t.insert(1, Target("https://github.com/mcode-cc/py-xshl-target"))
+        self.assertTrue(value0 is value2)
+        self.assertTrue(t.index(value0) == 1)
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestMethods)

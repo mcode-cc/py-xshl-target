@@ -243,15 +243,27 @@ class Targets(list):
     def __contains__(self, value: Target):
         return self.contains(self, value)
 
-    def insert(self, index, value: Target):
-        if (self._unique and value not in self) or not self._unique:
-            return super().insert(index, value)
+    def insert(self, index, value: Target) -> Target:
+        if not self._unique:
+            super().insert(index, value)
+        elif value not in self:
+            super().insert(index, value)
+        else:
+            i = super().index(value)
+            value = self[i]
+            del self[i]
+            super().insert(index, value)
+        return value
 
-    def append(self, value: Target) -> bool:
-        if (self._unique and value not in self) or not self._unique:
+    def append(self, value: Target) -> Target:
+        if not self._unique:
             super().append(value)
-            return True
-        return False
+            return value
+        elif value not in self:
+            super().append(value)
+            return value
+        else:
+            return self[super().index(value)]
 
     @property
     def dictionaries(self):
