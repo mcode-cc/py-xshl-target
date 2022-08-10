@@ -1,8 +1,10 @@
 
 import re
+import uuid
+from typing import Union
 from itertools import zip_longest
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
-
+from networkx import DiGraph, topological_sort, simple_cycles
 
 PROPERTIES = ["spot", "base", "entity", "@id", "@type", "@context"]
 reg = re.compile(r"([\w_@#$]+)")
@@ -127,15 +129,18 @@ def uri2target(value: str) -> dict:
 
 
 class Target:
-    spot = None
-    base = None
-    entity = None
-
-    _id = None
-    _context = None
-    _type = None
 
     def __init__(self, *args, **kwargs):
+        self.spot = None
+        self.base = None
+        self.entity = None
+
+        self._id = None
+        self._context = None
+        self._type = None
+
+        self._uid = uuid.uuid4()
+
         if len(args) > 1:
             items = dict(zip(PROPERTIES, args))
         elif len(args) == 1 and isinstance(args[0], (str, dict)):
@@ -143,8 +148,8 @@ class Target:
         else:
             items = {}
         items.update(kwargs)
-        for k in PROPERTIES:
-            setattr(self, k.replace("@", "_"), items.get(k))
+
+        self.from_dict(items)
 
     def __eq__(self, value):
         """ Return self==value. """
@@ -179,9 +184,13 @@ class Target:
     def __contains__(self, name: str):
         return name in PROPERTIES and getattr(self, name.replace("@", "_")) is not None
 
-    @classmethod
-    def dict(cls, value: dict):
-        return cls(**value)
+    @property
+    def sid(self) -> str:
+        return str(self._uid)
+
+    # @classmethod
+    # def dict(cls, value: dict):
+    #     return cls(**value)
 
     @classmethod
     def str(cls, value: str):
@@ -191,8 +200,8 @@ class Target:
         return unwind(self.as_dict, name)
 
     def clear(self):
-        self.spot, self.base, self.entity = None, None, None
-        self._id, self._context, self._type = None, None, None
+        for k in PROPERTIES:
+            setattr(self, k.replace("@", "_", 1), None)
 
     def __str__(self):
         entity = self.entity
@@ -211,7 +220,7 @@ class Target:
         return result.replace("://", ":", 1) if self.spot not in ["http", "https"] else result
 
     @property
-    def as_dict(self):
+    def as_dict(self) -> dict:
         result = {}
         for k, v in self.__dict__.copy().items():
             k = k.replace("_", "@")
@@ -219,11 +228,16 @@ class Target:
                 result[k] = v
         return result
 
+    def from_dict(self, items: dict) -> None:
+        for k in PROPERTIES:
+            setattr(self, k.replace("@", "_", 1), items.get(k))
+
     def child(self, entity):
         return Target(spot=self.base, base=self.entity, entity=entity)
 
 
 class Targets(list):
+
     def __init__(self, *args, unique: bool = False, **kwargs):
         _all = [Target(x) if not isinstance(x, Target) else x for x in args[0]] if len(args) > 0 else []
         if unique:
@@ -233,6 +247,9 @@ class Targets(list):
                     _init.append(i)
         else:
             _init = _all
+        self.__items = {}
+        for i in _init:
+            self.__items[i.sid] = i
         super(Targets, self).__init__(_init)
         self._unique = unique
 
@@ -243,27 +260,29 @@ class Targets(list):
     def __contains__(self, value: Target):
         return self.contains(self, value)
 
+    def __getitem__(self, y) -> Target:
+        if isinstance(y, str):
+            return self.__items[y]
+        return super(Targets, self).__getitem__(y)
+
     def insert(self, index, value: Target) -> Target:
-        if not self._unique:
+        if not self._unique or value not in self:
             super().insert(index, value)
-        elif value not in self:
-            super().insert(index, value)
+            self.__items[value.sid] = value
         else:
-            i = super().index(value)
+            i = self.index(value)
             value = self[i]
             del self[i]
             super().insert(index, value)
         return value
 
     def append(self, value: Target) -> Target:
-        if not self._unique:
+        if not self._unique or value not in self:
             super().append(value)
-            return value
-        elif value not in self:
-            super().append(value)
+            self.__items[value.sid] = value
             return value
         else:
-            return self[super().index(value)]
+            return self[self.index(value)]
 
     @property
     def dictionaries(self):
@@ -285,6 +304,10 @@ class Targets(list):
     def entities(self):
         return self._template(self, "ENTITY")
 
+    @property
+    def sids(self):
+        return self._template(self, "SID")
+
     @staticmethod
     def _template(value, name=None):
         f = {
@@ -292,10 +315,45 @@ class Targets(list):
             "#STRING": lambda x: str(x),
             "SPOT": lambda x: x.spot,
             "BASE": lambda x: x.base,
-            "ENTITY": lambda x: x.entity
+            "ENTITY": lambda x: x.entity,
+            "SID": lambda x: x.sid
         }
         name = str(name).upper() if name is not None and str(name).upper() in f.keys() else "#STRING"
         if isinstance(value, list):
             return [f[name](i) for i in value]
         else:
             return f[name](value)
+
+
+class Arborescences(Targets):
+
+    def __init__(self):
+        super(Arborescences, self).__init__(unique=True)
+        self.graph = DiGraph()
+
+    def append(self, value: Target, node: Target = None) -> tuple[Target, Union[Target, None]]:
+        if node is None:
+            value = super(Arborescences, self).append(value)
+            self.graph.add_node(value.sid)
+        else:
+            value = super(Arborescences, self).append(value)
+            node = super(Arborescences, self).append(node)
+            self.graph.add_edge(node.sid, value.sid)
+        return value, node
+
+    def requirements(self, value: Target) -> list[Target]:
+        if value in self:
+            value = self[self.index(value)]
+            for n in list(self.graph.edges([value.sid])):
+                yield self[n[1]]
+        else:
+            raise Exception("Value %s not exists" % str(value))
+
+    def topology(self, reverse=False):
+        top = topological_sort(self.graph)
+        if reverse:
+            for n in reversed(list(top)):
+                yield self[n]
+        else:
+            for n in top:
+                yield self[n]

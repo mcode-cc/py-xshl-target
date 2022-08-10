@@ -1,5 +1,7 @@
+import json
+from networkx import topological_sort
 import unittest
-from xshl.target import Target, Targets
+from xshl.target import Target, Targets, Arborescences, wind, unwind
 
 
 class TestMethods(unittest.TestCase):
@@ -51,6 +53,11 @@ class TestMethods(unittest.TestCase):
             "entity": "https://translate.yandex.ru?value.lang=en-ru&value.text=Targets"
         })
         self.assertTrue(len(t) == 3)
+
+    def test_target_clear(self):
+        t = Target("public", "url", "https://translate.yandex.ru?value.lang=en-ru&value.text=Targets")
+        t.clear()
+        self.assertTrue(len(t) == 0)
 
     def test_targets_init_unique(self):
         t = Targets([
@@ -149,7 +156,35 @@ class TestMethods(unittest.TestCase):
         t.insert(0, value0)
         value2 = t.insert(1, Target("https://github.com/mcode-cc/py-xshl-target"))
         self.assertTrue(value0 is value2)
+        self.assertTrue(t[1].sid == t[value2.sid].sid)
         self.assertTrue(t.index(value0) == 1)
+
+    def test_wind_unwind(self):
+        a = {
+            "a": {
+                "b": {
+                    "c": [
+                        {"bar": 1, "foo": 2},
+                        {"bar": 4, "foo": 3}
+                    ]
+                }
+            }
+
+        }
+        b = unwind(a)
+        c = wind(b)
+        self.assertTrue(b["a.b.c.1.foo"] == c["a"]["b"]["c"][1]["foo"])
+
+    def test_arborescences(self):
+        a = Arborescences()
+        root = Target("a:b@c")
+        a.append(Target("n:b@root"), root)
+        a.append(Target("n:a@root"), root)
+        a.append(Target("n:c@root"), root)
+        a.append(Target("n:x@c"), Target("n:c@root"))
+        a.append(Target("n:y@c"), Target("n:c@root"))
+        self.assertTrue(list(a.topology(reverse=True))[-1] == root)
+        self.assertTrue(len(list(a.requirements(Target("n:c@root")))) == 2)
 
 
 if __name__ == '__main__':
