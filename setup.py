@@ -50,6 +50,18 @@ with open(os.path.join(base_dir, "README.md"), "r") as f:
     long_description = f.read()
 
 
+def parse_requirements_file(filename):
+    with open(filename) as fid:
+        requires = [ln.strip() for ln in fid.readlines() if not ln.startswith("#")]
+    return requires
+
+
+install_requires = parse_requirements_file("requirements.txt")
+extras_require = {
+    dep: parse_requirements_file("requirements/" + dep + ".txt")
+    for dep in ["default"]
+}
+
 setup(
     name=about["__title__"],
     version=about["__version__"],
@@ -60,17 +72,19 @@ setup(
     url=about["__uri__"],
     project_urls={
         "Bug Tracker": "https://github.com/mcode-cc/py-xshl-target/issues",
+        "Source Code": "https://github.com/mcode-cc/py-xshl-target",
     },
     author=about["__author__"],
     author_email=about["__email__"],
     platforms=['Any'],
-    install_requires=[],
+    install_requires=install_requires,
+    extras_require=extras_require,
     packages=find_namespace_packages(include=['xshl.*']),
     include_package_data=True,
     data_files=[('.', ['LICENSE', 'COPYRIGHT'])],
     zip_safe=False,
     test_suite='tests',
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Development Status :: 1 - Planning",
@@ -81,14 +95,16 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Internet",
         "Topic :: Communications",
         "Topic :: Database",
         "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
         "Topic :: System :: Networking"
     ],
-    keywords='yandex cloud monitoring trace'
+    keywords='link tree target digraph reference groot wind unwind'
 )
