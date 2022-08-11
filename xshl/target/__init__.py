@@ -236,7 +236,7 @@ class Target:
         return Target(spot=self.base, base=self.entity, entity=entity)
 
 
-class Targets(list):
+class Reference(list):
 
     def __init__(self, *args, unique: bool = False, **kwargs):
         _all = [Target(x) if not isinstance(x, Target) else x for x in args[0]] if len(args) > 0 else []
@@ -250,7 +250,7 @@ class Targets(list):
         self.__items = {}
         for i in _init:
             self.__items[i.sid] = i
-        super(Targets, self).__init__(_init)
+        super(Reference, self).__init__(_init)
         self._unique = unique
 
     @staticmethod
@@ -263,7 +263,7 @@ class Targets(list):
     def __getitem__(self, y) -> Target:
         if isinstance(y, str):
             return self.__items[y]
-        return super(Targets, self).__getitem__(y)
+        return super(Reference, self).__getitem__(y)
 
     def insert(self, index, value: Target) -> Target:
         if not self._unique or value not in self:
@@ -325,19 +325,19 @@ class Targets(list):
             return f[name](value)
 
 
-class Arborescences(Targets):
+class GRoot(Reference):
 
     def __init__(self):
-        super(Arborescences, self).__init__(unique=True)
+        super(GRoot, self).__init__(unique=True)
         self.graph = DiGraph()
 
     def append(self, value: Target, node: Target = None) -> tuple[Target, Union[Target, None]]:
         if node is None:
-            value = super(Arborescences, self).append(value)
+            value = super(GRoot, self).append(value)
             self.graph.add_node(value.sid)
         else:
-            value = super(Arborescences, self).append(value)
-            node = super(Arborescences, self).append(node)
+            value = super(GRoot, self).append(value)
+            node = super(GRoot, self).append(node)
             self.graph.add_edge(node.sid, value.sid)
         return value, node
 

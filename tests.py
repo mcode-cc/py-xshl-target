@@ -1,7 +1,7 @@
 import json
 from networkx import topological_sort
 import unittest
-from xshl.target import Target, Targets, Arborescences, wind, unwind
+from xshl.target import Target, Reference, GRoot, wind, unwind
 
 
 class TestMethods(unittest.TestCase):
@@ -60,7 +60,7 @@ class TestMethods(unittest.TestCase):
         self.assertTrue(len(t) == 0)
 
     def test_targets_init_unique(self):
-        t = Targets([
+        t = Reference([
             Target("https://en.wikipedia.org/wiki/Object_database"),
             "https://translate.yandex.ru/?value.lang=en-ru&value.text=Targets"
         ], unique=True)
@@ -72,7 +72,7 @@ class TestMethods(unittest.TestCase):
         self.assertTrue(len(t) == 2)
 
     def test_targets_init(self):
-        t = Targets([
+        t = Reference([
             Target("https://en.wikipedia.org/wiki/Object_database"),
             "https://translate.yandex.ru/?value.lang=en-ru&value.text=Targets"
         ], unique=False)
@@ -84,7 +84,7 @@ class TestMethods(unittest.TestCase):
         self.assertTrue(len(t) == 4)
 
     def test_targets_unique_init(self):
-        t = Targets(
+        t = Reference(
             [
                 "project:[\"mcode-cc\",\"xshl\"]@pypi.org/xshl-target/#https://xshl.org/schemas/1.1/definitions/target.json",
                 "https://github.com/mcode-cc/py-xshl-target",
@@ -112,7 +112,7 @@ class TestMethods(unittest.TestCase):
         self.assertTrue(len(t) == 4)
 
     def test_targets_unique_append(self):
-        t = Targets(
+        t = Reference(
             [
                 "https://github.com/mcode-cc/py-xshl-target",
                 "https://en.wikipedia.org/wiki/Object_database",
@@ -144,7 +144,7 @@ class TestMethods(unittest.TestCase):
         self.assertTrue(value0 is value2)
 
     def test_targets_unique_insert(self):
-        t = Targets(
+        t = Reference(
             [
                 "https://en.wikipedia.org/wiki/Object_database",
                 "https://translate.yandex.ru?value.lang=en-ru&value.text=Targets",
@@ -176,7 +176,7 @@ class TestMethods(unittest.TestCase):
         self.assertTrue(b["a.b.c.1.foo"] == c["a"]["b"]["c"][1]["foo"])
 
     def test_arborescences(self):
-        a = Arborescences()
+        a = GRoot()
         root = Target("a:b@c")
         a.append(Target("n:b@root"), root)
         a.append(Target("n:a@root"), root)

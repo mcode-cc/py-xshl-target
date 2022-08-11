@@ -5,14 +5,13 @@
 
 # Python Library for XSHL Target
 
-[JSON Schema](https://xshl.org/schemas/1.1/definitions/target.json) 
-
+[JSON Schema](https://xshl.org/schemas/1.1/definitions/target.json)
 
 ```python
 import json
-from xshl.target import Target, Targets
+from xshl.target import Target, Reference
 
-t = Targets(
+t = Reference(
     [
         "project:[\"mcode-cc\",\"xshl\"]@pypi.org/xshl-target/#https://xshl.org/schemas/1.1/definitions/target.json",
         "https://github.com/mcode-cc/py-xshl-target",
