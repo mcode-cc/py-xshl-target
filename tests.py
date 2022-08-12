@@ -59,7 +59,7 @@ class TestMethods(unittest.TestCase):
         t.clear()
         self.assertTrue(len(t) == 0)
 
-    def test_targets_init_unique(self):
+    def test_reference_init_unique(self):
         t = Reference([
             Target("https://en.wikipedia.org/wiki/Object_database"),
             "https://translate.yandex.ru/?value.lang=en-ru&value.text=Targets"
@@ -71,7 +71,7 @@ class TestMethods(unittest.TestCase):
         t.insert(0, Target("https://en.wikipedia.org/wiki/Object_database"))
         self.assertTrue(len(t) == 2)
 
-    def test_targets_init(self):
+    def test_reference_init(self):
         t = Reference([
             Target("https://en.wikipedia.org/wiki/Object_database"),
             "https://translate.yandex.ru/?value.lang=en-ru&value.text=Targets"
@@ -83,7 +83,7 @@ class TestMethods(unittest.TestCase):
         t.insert(0, Target("https://en.wikipedia.org/wiki/Object_database"))
         self.assertTrue(len(t) == 4)
 
-    def test_targets_unique_init(self):
+    def test_reference_unique_init(self):
         t = Reference(
             [
                 "project:[\"mcode-cc\",\"xshl\"]@pypi.org/xshl-target/#https://xshl.org/schemas/1.1/definitions/target.json",
@@ -111,7 +111,7 @@ class TestMethods(unittest.TestCase):
         )
         self.assertTrue(len(t) == 4)
 
-    def test_targets_unique_append(self):
+    def test_reference_unique_append(self):
         t = Reference(
             [
                 "https://github.com/mcode-cc/py-xshl-target",
@@ -143,7 +143,7 @@ class TestMethods(unittest.TestCase):
         )
         self.assertTrue(value0 is value2)
 
-    def test_targets_unique_insert(self):
+    def test_reference_unique_insert(self):
         t = Reference(
             [
                 "https://en.wikipedia.org/wiki/Object_database",
@@ -158,6 +158,45 @@ class TestMethods(unittest.TestCase):
         self.assertTrue(value0 is value2)
         self.assertTrue(t[1].sid == t[value2.sid].sid)
         self.assertTrue(t.index(value0) == 1)
+
+    def test_reference_delete(self):
+        t = Reference(
+            [
+                "https://en.wikipedia.org/wiki/Object_database",
+                "https://translate.yandex.ru?value.lang=en-ru&value.text=Targets"
+            ],
+            unique=True
+        )
+        value0 = Target("https://github.com/mcode-cc/py-xshl-target")
+        t.insert(0, value0)
+        del t[0]
+        self.assertTrue(value0 not in t)
+
+    def test_groot_unique_insert(self):
+        g = GRoot()
+        for t in [
+            "https://en.wikipedia.org/wiki/Object_database",
+            "https://translate.yandex.ru?value.lang=en-ru&value.text=Targets",
+            "https://en.wikipedia.org/wiki/Object_database"
+        ]:
+            g.append(Target(t))
+        value0 = Target("https://github.com/mcode-cc/py-xshl-target")
+        g.insert(0, value0)
+        value2 = g.insert(1, Target("https://github.com/mcode-cc/py-xshl-target"))
+        self.assertTrue(value0 is value2)
+        self.assertTrue(g[1].sid == g[value2.sid].sid)
+        self.assertTrue(g.index(value0) == 1)
+
+    def test_arborescences(self):
+        a = GRoot()
+        root = Target("a:b@c")
+        a.append(Target("n:b@root"), root)
+        a.append(Target("n:a@root"), root)
+        a.append(Target("n:c@root"), root)
+        a.append(Target("n:x@c"), Target("n:c@root"))
+        a.append(Target("n:y@c"), Target("n:c@root"))
+        self.assertTrue(list(a.topology(reverse=True))[-1] == root)
+        self.assertTrue(len(list(a.requirements(Target("n:c@root")))) == 2)
 
     def test_wind_unwind(self):
         a = {
@@ -174,17 +213,6 @@ class TestMethods(unittest.TestCase):
         b = unwind(a)
         c = wind(b)
         self.assertTrue(b["a.b.c.1.foo"] == c["a"]["b"]["c"][1]["foo"])
-
-    def test_arborescences(self):
-        a = GRoot()
-        root = Target("a:b@c")
-        a.append(Target("n:b@root"), root)
-        a.append(Target("n:a@root"), root)
-        a.append(Target("n:c@root"), root)
-        a.append(Target("n:x@c"), Target("n:c@root"))
-        a.append(Target("n:y@c"), Target("n:c@root"))
-        self.assertTrue(list(a.topology(reverse=True))[-1] == root)
-        self.assertTrue(len(list(a.requirements(Target("n:c@root")))) == 2)
 
 
 if __name__ == '__main__':

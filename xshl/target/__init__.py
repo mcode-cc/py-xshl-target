@@ -1,7 +1,7 @@
 
 import re
 import uuid
-from typing import Union
+from typing import Optional, Tuple, Iterator, Union
 from itertools import zip_longest
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 from networkx import DiGraph, topological_sort, simple_cycles
@@ -260,10 +260,16 @@ class Reference(list):
     def __contains__(self, value: Target):
         return self.contains(self, value)
 
-    def __getitem__(self, y) -> Target:
-        if isinstance(y, str):
-            return self.__items[y]
-        return super(Reference, self).__getitem__(y)
+    def __getitem__(self, key: Union[int, str]) -> Target:
+        if isinstance(key, str):
+            return self.__items[key]
+        return super(Reference, self).__getitem__(key)
+
+    def __delitem__(self, key: Union[int, str]) -> None:
+        if isinstance(key, str) and key in self.__items:
+            key = self.index(self.__items[key])
+        del self.__items[self[key].sid]
+        super(Reference, self).__delitem__(key)
 
     def insert(self, index, value: Target) -> Target:
         if not self._unique or value not in self:
@@ -272,7 +278,7 @@ class Reference(list):
         else:
             i = self.index(value)
             value = self[i]
-            del self[i]
+            super(Reference, self).__delitem__(i)
             super().insert(index, value)
         return value
 
@@ -331,17 +337,25 @@ class GRoot(Reference):
         super(GRoot, self).__init__(unique=True)
         self.graph = DiGraph()
 
-    def append(self, value: Target, node: Target = None) -> tuple[Target, Union[Target, None]]:
+    def __delitem__(self, *args, **kwargs) -> None:
+        raise Exception("Method del not supported")
+
+    def insert(self, index, value: Target) -> Target:
+        value = super(GRoot, self).insert(index, value)
+        self.graph.add_node(value.sid)
+        return value
+
+    def append(self, value: Target, node: Target = None) -> Tuple[Target, Optional[Target]]:
         if node is None:
             value = super(GRoot, self).append(value)
             self.graph.add_node(value.sid)
         else:
-            value = super(GRoot, self).append(value)
             node = super(GRoot, self).append(node)
+            value = super(GRoot, self).append(value)
             self.graph.add_edge(node.sid, value.sid)
         return value, node
 
-    def requirements(self, value: Target) -> list[Target]:
+    def requirements(self, value: Target) -> Iterator[Target]:
         if value in self:
             value = self[self.index(value)]
             for n in list(self.graph.edges([value.sid])):
@@ -349,7 +363,7 @@ class GRoot(Reference):
         else:
             raise Exception("Value %s not exists" % str(value))
 
-    def topology(self, reverse=False):
+    def topology(self, reverse=False) -> Iterator[Target]:
         top = topological_sort(self.graph)
         if reverse:
             for n in reversed(list(top)):
