@@ -3,7 +3,9 @@
 [![PyPI - License](https://img.shields.io/pypi/l/xshl-target)](https://github.com/mcode-cc/py-xshl-target/blob/main/LICENSE)
 
 
-# Python Library for XSHL Target
+# Triples
+
+## Python Library for XSHL Target
 
 [JSON Schema](https://xshl.org/schemas/1.1/definitions/target.json)
 
